@@ -18,14 +18,6 @@ namespace ArrayCRUD
             set => arr[index] = value;
         }
 
-        public void PrintArray()
-        {
-            foreach (var obj in arr)
-            {
-                Console.WriteLine(obj);
-            }
-        }
-
         public IEnumerator GetEnumerator()
         {
             foreach (object obj in arr)

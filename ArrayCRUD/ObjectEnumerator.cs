@@ -5,34 +5,21 @@ namespace ArrayCRUD
 {
     public class ObjectEnumerator : IEnumerator
     {
-        private readonly object[] array;
+        private readonly ObjectArrayCollection arr;
         private int currentIndex = -1;
 
-        public ObjectEnumerator(object[] arr)
+        public ObjectEnumerator(ObjectArrayCollection array)
         {
-            array = arr;
+            arr = array;
         }
 
-        public object Current
-        {
-            get
-            {
-                try
-                {
-                    return array[currentIndex];
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    throw new InvalidOperationException();
-                }
-            }
-        }
+        object IEnumerator.Current => currentIndex >= 0 && currentIndex <= arr.Count ? arr[currentIndex] : null;
 
         public bool MoveNext()
         {
             currentIndex++;
 
-            return currentIndex < array.Length;
+            return currentIndex < arr.Count;
         }
 
         public void Reset()
