@@ -93,7 +93,7 @@ namespace ArrayCRUD
                 throw new ArgumentNullException(nameof(array), "array can 't be null");
             }
 
-            if (arrayIndex < 0)
+            if (arrayIndex < 0 || arrayIndex > array.Length)
             {
                 throw new ArgumentOutOfRangeException(nameof(arrayIndex), "start index must be positive");
             }
@@ -105,7 +105,7 @@ namespace ArrayCRUD
 
             for (int i = 0; i < Count; i++)
             {
-                arr[i + arrayIndex] = this[i];
+                array[i + arrayIndex] = this[i];
             }
         }
 
