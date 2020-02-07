@@ -9,6 +9,38 @@ namespace ArrayCRUDTest
     public class CircularDoubleLinkedListTest
     {
         [Fact]
+        public void AddLastToEmptyList()
+        {
+           
+            CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>();
+            listTest.AddLast("first");
+            Assert.Equal(1, listTest.Count);
+            Assert.True(listTest.Contains("first"));
+        }
+
+        [Fact]
+        public void AddItemAsLastNode()
+        {
+            string[] words =
+           { "the", "fox", "jumps", "over", "the", "dog" };
+            CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>(words);
+            Assert.Equal("dog", listTest.Last.Value);
+            Assert.Equal("the", listTest.Last.Next.Value);
+        }
+
+        [Fact]
+        public void AddLastNode()
+        {
+            string[] words =
+           { "the", "fox", "jumps", "over", "the", "dog" };
+            CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>(words);
+            ArrayCRUD.LinkedListNode<string> addedNode = new ArrayCRUD.LinkedListNode<string>("last added node");
+            listTest.AddLast(addedNode);
+            Assert.Equal("last added node", listTest.Last.Value);
+            Assert.Equal("the", listTest.Last.Next.Value);
+        }
+
+        [Fact]
         public void AddNodeToCollection()
         {
             string[] words =
@@ -18,6 +50,18 @@ namespace ArrayCRUDTest
             icoll.Add("rhinoceros");
             Assert.Equal(7, icoll.Count);
             Assert.True(icoll.Contains("rhinoceros"));
+        }
+
+        [Fact]
+        public void AddItemAfterLastNode()
+        {
+            string[] words =
+           { "the", "fox", "jumps", "over", "the", "dog" };
+            CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>(words);
+            listTest.AddAfter(listTest.Last, "old");
+            Assert.Equal("old", listTest.Last.Value);
+            Assert.Equal("dog", listTest.Last.Previous.Value);
+            Assert.Equal("the", listTest.Last.Next.Value);
         }
 
         [Fact]
@@ -90,16 +134,30 @@ namespace ArrayCRUDTest
         }
 
         [Fact]
+        public void AddItemBeforeFirstNode()
+        {
+            string[] words =
+           { "the", "fox", "jumps", "over", "the", "dog" };
+            CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>(words);
+            listTest.AddBefore(listTest.First, "old");
+            Assert.Contains("old", listTest);
+            Assert.Equal("old", listTest.First.Value);
+            Assert.Equal("the", listTest.First.Next.Value);
+            Assert.Equal("dog", listTest.First.Previous.Value);
+            Assert.Equal("old", listTest.Last.Next.Value);
+        }
+
+        [Fact]
         public void AddItemBeforeNode()
         {
             string[] words =
            { "the", "fox", "jumps", "over", "the", "dog" };
             CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>(words);
-            ArrayCRUD.LinkedListNode<string> second = listTest.First.Next;
-            listTest.AddBefore(second, "old");
-            ArrayCRUD.LinkedListNode<string> addedNode = listTest.First.Next;
+            listTest.AddBefore(listTest.First.Next, "old");
             Assert.Contains("old", listTest);
-            Assert.Equal("old", addedNode.Value);
+            Assert.Equal("old", listTest.First.Next.Value);
+            Assert.Equal("the", listTest.First.Value);
+            Assert.Equal("fox", listTest.First.Next.Next.Value);
         }
 
         [Fact]
@@ -124,9 +182,9 @@ namespace ArrayCRUDTest
             CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>(words);
             ArrayCRUD.LinkedListNode<string> addedNode = new ArrayCRUD.LinkedListNode<string>("nice");
             listTest.AddFirst(addedNode);
-            ArrayCRUD.LinkedListNode<string> newAddedNode = listTest.First;
-            Assert.Contains("nice", listTest);
-            Assert.Equal("nice", newAddedNode.Value);
+            Assert.Equal("nice", listTest.First.Value);
+            Assert.Equal("the", listTest.First.Next.Value);
+            Assert.Equal("dog", listTest.First.Previous.Value);
         }
 
         [Fact]
@@ -138,8 +196,40 @@ namespace ArrayCRUDTest
             ArrayCRUD.LinkedListNode<string> addedNode = new ArrayCRUD.LinkedListNode<string>("nice");
             listTest.AddLast(addedNode);
             ArrayCRUD.LinkedListNode<string> newAddedNode = listTest.Last;
-            Assert.Contains("nice", listTest);
-            Assert.Equal("nice", newAddedNode.Value);
+            Assert.Equal("nice", listTest.Last.Value);
+            Assert.Equal("the", listTest.Last.Next.Value);
+            Assert.Equal("dog", listTest.Last.Previous.Value);
+        }
+
+        [Fact]
+        public void ClearList()
+        {
+            string[] words =
+           { "the", "fox", "jumps", "over", "the", "dog" };
+            CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>(words);
+            listTest.Clear();
+            Assert.Equal(0, listTest.Count);
+            listTest.AddLast("first element in an empty list");
+            Assert.Equal("first element in an empty list", listTest.First.Next.Value);
+        }
+
+        [Fact]
+        public void ReverseEnumerator()
+        {
+            CircularDoubleLinkedListCollection<string> reversedList = new CircularDoubleLinkedListCollection<string>();
+            string[] words =
+           { "over", "the", "dog" };
+            CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>(words);
+            foreach (string s in listTest.GetReverseEnumerator())
+            {
+                reversedList.AddLast(s);
+            }
+
+            Assert.Equal("dog", reversedList.First.Value);
+            Assert.Equal("the", reversedList.First.Next.Value);
+            Assert.Equal("over", reversedList.First.Next.Next.Value);
+
+
         }
 
         [Fact]
@@ -148,7 +238,7 @@ namespace ArrayCRUDTest
             string[] words =
            { "the", "fox", "jumps", "over", "the", "dog" };
             CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>(words);
-            ArrayCRUD.LinkedListNode<string> foundNode = listTest.Find(listTest.Last.Previous.Value);
+            ArrayCRUD.LinkedListNode<string> foundNode = listTest.Find("the");
             Assert.Equal("the", foundNode.Value);
         }
 

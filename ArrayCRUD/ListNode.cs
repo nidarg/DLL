@@ -6,6 +6,10 @@ namespace ArrayCRUD
 {
     public class LinkedListNode<T>
     {
+        public LinkedListNode()
+        {
+        }
+
         public LinkedListNode(T item)
         {
             this.Value = item;

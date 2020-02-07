@@ -7,15 +7,21 @@ namespace ArrayCRUD
 {
     public class CircularDoubleLinkedListCollection<T> : ICollection<T>
     {
-        internal LinkedListNode<T> Head;
         internal int CountValue;
+        private readonly LinkedListNode<T> head;
 
         public CircularDoubleLinkedListCollection()
         {
+            this.head = new LinkedListNode<T>();
+            head.Next = head;
+            head.Previous = head;
         }
 
         public CircularDoubleLinkedListCollection(IEnumerable<T> collection)
         {
+            this.head = new LinkedListNode<T>();
+            head.Next = head;
+            head.Previous = head;
             if (collection == null)
             {
                 throw new ArgumentNullException(nameof(collection));
@@ -36,7 +42,7 @@ namespace ArrayCRUD
         {
             get
             {
-                return Head;
+                return head.Next;
             }
         }
 
@@ -44,7 +50,7 @@ namespace ArrayCRUD
         {
             get
             {
-                return Head?.Previous;
+                return head.Previous;
             }
         }
 
@@ -61,113 +67,84 @@ namespace ArrayCRUD
         public LinkedListNode<T> AddAfter(LinkedListNode<T> node, T item)
         {
             VerifyExistingNode(node);
+            if (node == head.Previous)
+            {
+                return this.AddLast(item);
+            }
+
             LinkedListNode<T> newNode = new LinkedListNode<T>(item, node.List);
-            InsertAfter(node, newNode);
-            return newNode;
+            return this.InsertBefore(node.Next, newNode);
         }
 
         public void AddAfter(LinkedListNode<T> node, LinkedListNode<T> newNode)
         {
            VerifyExistingNode(node);
            VerifyNewNode(newNode);
-           InsertAfter(node, newNode);
+           InsertBefore(node.Next, newNode);
            newNode.List = this;
         }
 
         public LinkedListNode<T> AddBefore(LinkedListNode<T> node, T item)
         {
             VerifyExistingNode(node);
-            LinkedListNode<T> newNode = new LinkedListNode<T>(item, node.List);
-            InsertBefore(node, newNode);
-            if (node == Head)
+            if (node == head.Next)
             {
-                Head = newNode;
+                return this.AddFirst(item);
             }
 
-            return newNode;
+            LinkedListNode<T> newNode = new LinkedListNode<T>(item, node.List);
+            return this.InsertBefore(node, newNode);
         }
 
         public void AddBefore(LinkedListNode<T> node, LinkedListNode<T> newNode)
         {
             VerifyExistingNode(node);
             VerifyNewNode(newNode);
-            InsertBefore(node, newNode);
-            newNode.List = this;
-            if (node != Head)
+            if (node == head.Next)
             {
-                return;
+               this.AddFirst(newNode);
             }
 
-            Head = newNode;
+            InsertBefore(node, newNode);
+            newNode.List = this;
         }
 
         public LinkedListNode<T> AddFirst(T item)
         {
             LinkedListNode<T> newNode = new LinkedListNode<T>(item, this);
-            if (Head == null)
-            {
-                InsertToEmptyList(newNode);
-            }
-            else
-            {
-                InsertBefore(Head, newNode);
-                Head = newNode;
-            }
-
+            AddAsFirst(newNode);
+            CountValue++;
             return newNode;
         }
 
         public void AddFirst(LinkedListNode<T> newNode)
         {
             VerifyNewNode(newNode);
-            if (Head == null)
-            {
-                InsertToEmptyList(newNode);
-            }
-            else
-            {
-                InsertBefore(Head, newNode);
-                Head = newNode;
-            }
-
+            AddAsFirst(newNode);
+            CountValue++;
             newNode.List = this;
         }
 
         public LinkedListNode<T> AddLast(T item)
         {
             LinkedListNode<T> newNode = new LinkedListNode<T>(item, this);
-            if (Head == null)
-            {
-                InsertToEmptyList(newNode);
-            }
-            else
-            {
-                InsertBefore(Head, newNode);
-            }
-
+            AddAsLast(newNode);
+            CountValue++;
             return newNode;
         }
 
         public void AddLast(LinkedListNode<T> newNode)
         {
             VerifyNewNode(newNode);
-
-            if (Head == null)
-            {
-                InsertToEmptyList(newNode);
-            }
-            else
-            {
-                InsertBefore(Head, newNode);
-            }
-
+            AddAsLast(newNode);
+            CountValue++;
             newNode.List = this;
         }
 
         public void Clear()
         {
-            LinkedListNode<T> node = Head;
-            while (node != null)
+            LinkedListNode<T> node = head.Next;
+            while (node != head.Next)
             {
                 LinkedListNode<T> deletedNode = node;
                 node = node.Next;
@@ -176,24 +153,94 @@ namespace ArrayCRUD
                 deletedNode.Previous = null;
             }
 
-            Head = null;
+            head.Next = head;
+            head.Previous = head;
             CountValue = 0;
         }
 
         public LinkedListNode<T> Find(T item)
-        {
-            return FindFirstNode(Head, item);
-        }
+            {
+            LinkedListNode<T> node = head.Next;
+            EqualityComparer<T> comparer = EqualityComparer<T>.Default;
+            if (node == null)
+            {
+                return null;
+            }
+
+            if (item != null)
+            {
+                do
+                {
+                    if (comparer.Equals(node.Value, item))
+                    {
+                        return node;
+                    }
+
+                    node = node.Next;
+                }
+                while (node != head.Next);
+            }
+            else
+            {
+                do
+                {
+                    if (node.Value == null)
+                    {
+                        return node;
+                    }
+
+                    node = node.Next;
+                }
+                while (node != head.Next);
+            }
+
+            return null;
+            }
 
         public LinkedListNode<T> FindLast(T item)
         {
-            LinkedListNode<T> node = Head.Previous;
-            return FindLastNode(node, item);
+            {
+                LinkedListNode<T> node = head.Previous;
+                EqualityComparer<T> comparer = EqualityComparer<T>.Default;
+                if (node == null)
+                {
+                    return null;
+                }
+
+                if (item != null)
+                {
+                    do
+                    {
+                        if (comparer.Equals(node.Value, item))
+                        {
+                            return node;
+                        }
+
+                        node = node.Previous;
+                    }
+                    while (node != head.Previous);
+                }
+                else
+                {
+                    do
+                    {
+                        if (node.Value == null)
+                        {
+                            return node;
+                        }
+
+                        node = node.Previous;
+                    }
+                    while (node != head.Previous);
+                }
+
+                return null;
+            }
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            LinkedListNode<T> current = Head;
+            LinkedListNode<T> current = head.Next;
             if (current != null)
             {
                 do
@@ -201,8 +248,24 @@ namespace ArrayCRUD
                     yield return current.Value;
                     current = current.Next;
                 }
-                while (current != Head);
+                while (current != head.Next);
             }
+        }
+
+        public IEnumerable<T> GetReverseEnumerator()
+            {
+            LinkedListNode<T> current = head.Previous;
+            if (current == null)
+            {
+                yield break;
+            }
+
+            do
+            {
+                yield return current.Value;
+                current = current.Previous;
+            }
+            while (current != head.Previous);
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -232,7 +295,7 @@ namespace ArrayCRUD
                 throw new ArgumentException("Not enough space to copy all elements");
             }
 
-            LinkedListNode<T> node = Head;
+            LinkedListNode<T> node = head.Next;
             for (int i = 0; i < Count; i++)
             {
                 array[i + arrayIndex] = node.Value;
@@ -260,22 +323,22 @@ namespace ArrayCRUD
 
         public void RemoveFirst()
         {
-            if (Head == null)
+            if (EmptyList())
             {
                 throw new InvalidOperationException("Empty list");
             }
 
-            RemoveNode(Head);
+            RemoveNode(head.Next);
         }
 
         public void RemoveLast()
         {
-            if (Head == null)
+            if (EmptyList())
             {
                 throw new InvalidOperationException("Empty list");
             }
 
-            RemoveNode(Head.Previous);
+            RemoveNode(head.Previous);
         }
 
         private void VerifyExistingNode(LinkedListNode<T> node)
@@ -308,46 +371,42 @@ namespace ArrayCRUD
             throw new InvalidOperationException("node belongs to another list");
         }
 
-        private void InsertAfter(LinkedListNode<T> node, LinkedListNode<T> newNode)
+        private LinkedListNode<T> InsertBefore(LinkedListNode<T> node, LinkedListNode<T> newNode)
         {
-            newNode.Next = node.Next;
-            node.Next.Previous = newNode;
-            newNode.Previous = node;
-            node.Next = newNode;
-            CountValue++;
+            node.Previous.Next = newNode;
+            newNode.Previous = node.Previous;
+            newNode.Next = node;
+            node.Previous = newNode;
+            return newNode;
         }
 
-        private void InsertBefore(LinkedListNode<T> node, LinkedListNode<T> newNode)
+        private void AddAsFirst(LinkedListNode<T> newNode)
         {
-            newNode.Next = node;
-            newNode.Previous = node.Previous;
-            node.Previous.Next = newNode;
-            node.Previous = newNode;
-            CountValue++;
+            newNode.Previous = head.Previous;
+            newNode.Next = head.Next;
+            head.Next = newNode;
+            head.Previous.Next = newNode;
+        }
+
+        private void AddAsLast(LinkedListNode<T> newNode)
+        {
+            head.Previous.Next = newNode;
+            newNode.Next = head.Next;
+            newNode.Previous = head.Previous;
+            head.Previous = newNode;
+        }
+
+        private bool EmptyList()
+        {
+            return head.Previous == head && head.Next == head;
         }
 
         private void InsertToEmptyList(LinkedListNode<T> newNode)
         {
             newNode.Next = newNode;
             newNode.Previous = newNode;
-            Head = newNode;
-            CountValue++;
-        }
-
-        private LinkedListNode<T> FindFirstNode(LinkedListNode<T> node, T valueToCompare)
-        {
-            EqualityComparer<T> comparer = EqualityComparer<T>.Default;
-            LinkedListNode<T> result = null;
-            if (comparer.Equals(node.Value, valueToCompare))
-            {
-                return node;
-            }
-            else if (node.Next != Head)
-            {
-                return FindFirstNode(node.Next, valueToCompare);
-            }
-
-            return result;
+            head.Next = newNode;
+            head.Previous = newNode;
         }
 
         private LinkedListNode<T> FindLastNode(LinkedListNode<T> node, T valueToCompare)
@@ -358,7 +417,7 @@ namespace ArrayCRUD
             {
                 return node;
             }
-            else if (node.Previous != Head.Previous)
+            else if (node.Previous != head.Previous)
             {
                 return FindLastNode(node.Previous, valueToCompare);
             }
@@ -372,16 +431,23 @@ namespace ArrayCRUD
         {
             if (node.Next == node)
             {
-                Head = null;
+                head.Next = head;
+                head.Previous = head;
             }
             else
             {
                 node.Next.Previous = node.Previous;
                 node.Previous.Next = node.Next;
                 if
-                    (Head == node)
+                    (head.Next == node)
                 {
-                    Head = node.Next;
+                    head.Next = node.Next;
+                }
+
+                if
+                    (head.Previous == node)
+                {
+                    head.Previous = node.Previous;
                 }
             }
 
