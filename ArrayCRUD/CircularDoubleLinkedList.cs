@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -19,7 +19,7 @@ namespace ArrayCRUD
 
         public CircularDoubleLinkedListCollection(IEnumerable<T> collection)
         {
-            this.head = new LinkedListNode<T>();
+            this.head = new LinkedListNode<T>(default(T));
             head.Next = head;
             head.Previous = head;
             if (collection == null)
@@ -64,55 +64,32 @@ namespace ArrayCRUD
             AddLast(item);
         }
 
-        public LinkedListNode<T> AddAfter(LinkedListNode<T> node, T item)
-        {
-            VerifyExistingNode(node);
-            if (node == head.Previous)
-            {
-                return this.AddLast(item);
-            }
-
-            LinkedListNode<T> newNode = new LinkedListNode<T>(item, node.List);
-            return this.InsertBefore(node.Next, newNode);
-        }
-
-        public void AddAfter(LinkedListNode<T> node, LinkedListNode<T> newNode)
-        {
-           VerifyExistingNode(node);
-           VerifyNewNode(newNode);
-           InsertBefore(node.Next, newNode);
-           newNode.List = this;
-        }
-
         public LinkedListNode<T> AddBefore(LinkedListNode<T> node, T item)
         {
             VerifyExistingNode(node);
-            if (node == head.Next)
-            {
-                return this.AddFirst(item);
-            }
-
             LinkedListNode<T> newNode = new LinkedListNode<T>(item, node.List);
-            return this.InsertBefore(node, newNode);
+            InsertBefore(node, newNode);
+            Last.Next = First;
+            First.Previous = Last;
+            return newNode;
         }
 
         public void AddBefore(LinkedListNode<T> node, LinkedListNode<T> newNode)
         {
             VerifyExistingNode(node);
             VerifyNewNode(newNode);
-            if (node == head.Next)
-            {
-               this.AddFirst(newNode);
-            }
-
             InsertBefore(node, newNode);
+            Last.Next = First;
+            First.Previous = Last;
             newNode.List = this;
         }
 
         public LinkedListNode<T> AddFirst(T item)
         {
             LinkedListNode<T> newNode = new LinkedListNode<T>(item, this);
-            AddAsFirst(newNode);
+            InsertBefore(First, newNode);
+            Last.Next = First;
+            First.Previous = Last;
             CountValue++;
             return newNode;
         }
@@ -120,7 +97,9 @@ namespace ArrayCRUD
         public void AddFirst(LinkedListNode<T> newNode)
         {
             VerifyNewNode(newNode);
-            AddAsFirst(newNode);
+            InsertBefore(First, newNode);
+            Last.Next = First;
+            First.Previous = Last;
             CountValue++;
             newNode.List = this;
         }
@@ -128,7 +107,8 @@ namespace ArrayCRUD
         public LinkedListNode<T> AddLast(T item)
         {
             LinkedListNode<T> newNode = new LinkedListNode<T>(item, this);
-            AddAsLast(newNode);
+            InsertBefore(head, newNode);
+            Last.Next = First;
             CountValue++;
             return newNode;
         }
@@ -136,62 +116,95 @@ namespace ArrayCRUD
         public void AddLast(LinkedListNode<T> newNode)
         {
             VerifyNewNode(newNode);
-            AddAsLast(newNode);
+            InsertBefore(head, newNode);
+            Last.Next = First;
+            First.Previous = Last;
             CountValue++;
             newNode.List = this;
         }
 
-        public void Clear()
+        public LinkedListNode<T> AddAfter(LinkedListNode<T> node, T item)
         {
-            LinkedListNode<T> node = head.Next;
-            while (node != head.Next)
+            VerifyExistingNode(node);
+            LinkedListNode<T> newNode = new LinkedListNode<T>(item, node.List);
+            if (node != head.Previous)
             {
-                LinkedListNode<T> deletedNode = node;
-                node = node.Next;
-                deletedNode.List = null;
-                deletedNode.Next = null;
-                deletedNode.Previous = null;
+                InsertBefore(node.Next, newNode);
+            }
+            else
+            {
+                InsertBefore(head, newNode);
+                Last.Next = First;
+                First.Previous = Last;
             }
 
+            return newNode;
+        }
+
+        public void AddAfter(LinkedListNode<T> node, LinkedListNode<T> newNode)
+        {
+            VerifyExistingNode(node);
+            VerifyNewNode(newNode);
+            if (node != head.Previous)
+            {
+                InsertBefore(node.Next, newNode);
+            }
+            else
+            {
+                InsertBefore(head, newNode);
+                Last.Next = First;
+                First.Previous = Last;
+            }
+        }
+
+        public void Clear()
+        {
             head.Next = head;
             head.Previous = head;
             CountValue = 0;
         }
 
+        public IEnumerator<T> GetEnumerator()
+        {
+            for (LinkedListNode<T> t = head; t != head.Previous; t = t.Next)
+            {
+                yield return t.Next.Value;
+            }
+        }
+
+        public IEnumerable<LinkedListNode<T>> GetNodeEnumerator()
+        {
+            for (LinkedListNode<T> t = head; t != head.Previous; t = t.Next)
+            {
+                yield return t.Next;
+            }
+        }
+
+        public IEnumerable<T> GetReverseEnumerator()
+        {
+            for (LinkedListNode<T> t = head; t != head.Next; t = t.Previous)
+            {
+                yield return t.Previous.Value;
+            }
+        }
+
+        public IEnumerable<LinkedListNode<T>> GetReverseNodeEnumerator()
+        {
+            for (LinkedListNode<T> t = head; t != head.Next; t = t.Previous)
+            {
+                yield return t.Previous;
+            }
+        }
+
         public LinkedListNode<T> Find(T item)
             {
-            LinkedListNode<T> node = head.Next;
             EqualityComparer<T> comparer = EqualityComparer<T>.Default;
-            if (node == null)
+            foreach (LinkedListNode<T> t in this.GetNodeEnumerator())
             {
-                return null;
-            }
-
-            if (item != null)
-            {
-                do
+                if (comparer.Equals(t.Value, item))
                 {
-                    if (comparer.Equals(node.Value, item))
-                    {
-                        return node;
-                    }
-
-                    node = node.Next;
+                    return t;
                 }
-                while (node != head.Next);
-            }
-            else
-            {
-                do
-                {
-                    if (node.Value == null)
-                    {
-                        return node;
-                    }
-
-                    node = node.Next;
-                }
-                while (node != head.Next);
             }
 
             return null;
@@ -200,72 +213,17 @@ namespace ArrayCRUD
         public LinkedListNode<T> FindLast(T item)
         {
             {
-                LinkedListNode<T> node = head.Previous;
                 EqualityComparer<T> comparer = EqualityComparer<T>.Default;
-                if (node == null)
+                foreach (LinkedListNode<T> t in this.GetReverseNodeEnumerator())
                 {
-                    return null;
-                }
-
-                if (item != null)
-                {
-                    do
+                    if (comparer.Equals(t.Value, item))
                     {
-                        if (comparer.Equals(node.Value, item))
-                        {
-                            return node;
-                        }
-
-                        node = node.Previous;
+                        return t;
                     }
-                    while (node != head.Previous);
-                }
-                else
-                {
-                    do
-                    {
-                        if (node.Value == null)
-                        {
-                            return node;
-                        }
-
-                        node = node.Previous;
-                    }
-                    while (node != head.Previous);
                 }
 
                 return null;
             }
-        }
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            LinkedListNode<T> current = head.Next;
-            if (current != null)
-            {
-                do
-                {
-                    yield return current.Value;
-                    current = current.Next;
-                }
-                while (current != head.Next);
-            }
-        }
-
-        public IEnumerable<T> GetReverseEnumerator()
-            {
-            LinkedListNode<T> current = head.Previous;
-            if (current == null)
-            {
-                yield break;
-            }
-
-            do
-            {
-                yield return current.Value;
-                current = current.Previous;
-            }
-            while (current != head.Previous);
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -347,13 +305,10 @@ namespace ArrayCRUD
             {
                 throw new ArgumentNullException(nameof(node));
             }
-
-            if (node.List == this)
+            else if (node.List != this)
             {
-                return;
+                throw new InvalidOperationException("node doesn't belongs to this list");
             }
-
-            throw new InvalidOperationException("node doesn't belongs to this list");
         }
 
         private void VerifyNewNode(LinkedListNode<T> node)
@@ -371,60 +326,17 @@ namespace ArrayCRUD
             throw new InvalidOperationException("node belongs to another list");
         }
 
-        private LinkedListNode<T> InsertBefore(LinkedListNode<T> node, LinkedListNode<T> newNode)
+        private void InsertBefore(LinkedListNode<T> node, LinkedListNode<T> newNode)
         {
-            node.Previous.Next = newNode;
-            newNode.Previous = node.Previous;
             newNode.Next = node;
+            newNode.Previous = node.Previous;
+            node.Previous.Next = newNode;
             node.Previous = newNode;
-            return newNode;
-        }
-
-        private void AddAsFirst(LinkedListNode<T> newNode)
-        {
-            newNode.Previous = head.Previous;
-            newNode.Next = head.Next;
-            head.Next = newNode;
-            head.Previous.Next = newNode;
-        }
-
-        private void AddAsLast(LinkedListNode<T> newNode)
-        {
-            head.Previous.Next = newNode;
-            newNode.Next = head.Next;
-            newNode.Previous = head.Previous;
-            head.Previous = newNode;
         }
 
         private bool EmptyList()
         {
             return head.Previous == head && head.Next == head;
-        }
-
-        private void InsertToEmptyList(LinkedListNode<T> newNode)
-        {
-            newNode.Next = newNode;
-            newNode.Previous = newNode;
-            head.Next = newNode;
-            head.Previous = newNode;
-        }
-
-        private LinkedListNode<T> FindLastNode(LinkedListNode<T> node, T valueToCompare)
-        {
-            EqualityComparer<T> comparer = EqualityComparer<T>.Default;
-            LinkedListNode<T> result = null;
-            if (comparer.Equals(node.Value, valueToCompare))
-            {
-                return node;
-            }
-            else if (node.Previous != head.Previous)
-            {
-                return FindLastNode(node.Previous, valueToCompare);
-            }
-            else
-            {
-                return result;
-            }
         }
 
         private void RemoveNode(LinkedListNode<T> node)
