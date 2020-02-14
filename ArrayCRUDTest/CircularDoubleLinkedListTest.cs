@@ -1,4 +1,4 @@
-﻿using ArrayCRUD;
+using ArrayCRUD;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -38,6 +38,7 @@ namespace ArrayCRUDTest
             listTest.AddLast(addedNode);
             Assert.Equal("last added node", listTest.Last.Value);
             Assert.Equal("the", listTest.Last.Next.Value);
+            Assert.Equal("last added node", listTest.First.Previous.Value);
         }
 
         [Fact]
@@ -110,12 +111,11 @@ namespace ArrayCRUDTest
             string[] words =
            { "the", "fox", "jumps", "over", "the", "dog" };
             CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>(words);
-            ArrayCRUD.LinkedListNode<string> first = listTest.First;
-            ArrayCRUD.LinkedListNode<string> addedNode =new ArrayCRUD.LinkedListNode<string> ("nice");
-            listTest.AddAfter(first, addedNode);
-            ArrayCRUD.LinkedListNode<string> newAddedNode = listTest.First.Next;
+            listTest.AddAfter(listTest.Last, "nice");
             Assert.Contains("nice", listTest);
-            Assert.Equal("nice", newAddedNode.Value);
+            Assert.Equal("nice", listTest.Last.Value);
+            Assert.Equal("dog", listTest.Last.Previous.Value);
+            Assert.Equal("the", listTest.Last.Next.Value);
         }
 
         [Fact]
@@ -137,14 +137,13 @@ namespace ArrayCRUDTest
         public void AddItemBeforeFirstNode()
         {
             string[] words =
-           { "the", "fox", "jumps", "over", "the", "dog" };
-            CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>(words);
-            listTest.AddBefore(listTest.First, "old");
-            Assert.Contains("old", listTest);
-            Assert.Equal("old", listTest.First.Value);
-            Assert.Equal("the", listTest.First.Next.Value);
-            Assert.Equal("dog", listTest.First.Previous.Value);
-            Assert.Equal("old", listTest.Last.Next.Value);
+           { "the", "fox", "jumps"};
+            CircularDoubleLinkedListCollection<string> list = new CircularDoubleLinkedListCollection<string>(words);
+            list.AddBefore(list.First, "old");
+            Assert.Equal("old", list.First.Value);
+            Assert.Equal("the", list.First.Next.Value);
+            Assert.Equal("jumps", list.First.Previous.Value);
+            Assert.Equal("old", list.Last.Next.Value);
         }
 
         [Fact]
@@ -184,6 +183,7 @@ namespace ArrayCRUDTest
             listTest.AddFirst(addedNode);
             Assert.Equal("nice", listTest.First.Value);
             Assert.Equal("the", listTest.First.Next.Value);
+            Assert.Equal("nice", listTest.Last.Next.Value);
             Assert.Equal("dog", listTest.First.Previous.Value);
         }
 
@@ -211,25 +211,6 @@ namespace ArrayCRUDTest
             Assert.Equal(0, listTest.Count);
             listTest.AddLast("first element in an empty list");
             Assert.Equal("first element in an empty list", listTest.First.Next.Value);
-        }
-
-        [Fact]
-        public void ReverseEnumerator()
-        {
-            CircularDoubleLinkedListCollection<string> reversedList = new CircularDoubleLinkedListCollection<string>();
-            string[] words =
-           { "over", "the", "dog" };
-            CircularDoubleLinkedListCollection<string> listTest = new CircularDoubleLinkedListCollection<string>(words);
-            foreach (string s in listTest.GetReverseEnumerator())
-            {
-                reversedList.AddLast(s);
-            }
-
-            Assert.Equal("dog", reversedList.First.Value);
-            Assert.Equal("the", reversedList.First.Next.Value);
-            Assert.Equal("over", reversedList.First.Next.Next.Value);
-
-
         }
 
         [Fact]
@@ -342,5 +323,11 @@ namespace ArrayCRUDTest
             listTest.RemoveLast();
             Assert.Equal("the", listTest.Last.Value);
         }
+
+        // n am folosit AddBefore la celelalte metode pt ca am VerifyExistingNode si mi arunca exceptia Invalid operation
+        // daca nu foloseam la celelalte metode VerifyExistingNode nu respectam ruleset ul
+        // la AddAfter trebuie facuta distinctie intre adugarea dupa ultimul element sau altul
+        // la InsertBefore nu se poate stabili in cadrul metodei legatura First.Previous = Last pentru ca mi ia elementul 
+        //          care era First inainte de inserare si practic nu se face legatura corecta
     }
 }
