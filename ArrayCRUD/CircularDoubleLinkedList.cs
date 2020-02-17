@@ -66,12 +66,8 @@ namespace ArrayCRUD
 
         public LinkedListNode<T> AddBefore(LinkedListNode<T> node, T item)
         {
-            VerifyExistingNode(node);
-            LinkedListNode<T> newNode = new LinkedListNode<T>(item, node.List);
-            InsertBefore(node, newNode);
-            Last.Next = First;
-            First.Previous = Last;
-            return newNode;
+            AddBefore(node, new LinkedListNode<T>(item));
+            return new LinkedListNode<T>(item);
         }
 
         public void AddBefore(LinkedListNode<T> node, LinkedListNode<T> newNode)
@@ -82,26 +78,18 @@ namespace ArrayCRUD
             Last.Next = First;
             First.Previous = Last;
             newNode.List = this;
+            CountValue++;
         }
 
         public LinkedListNode<T> AddFirst(T item)
         {
-            LinkedListNode<T> newNode = new LinkedListNode<T>(item, this);
-            InsertBefore(First, newNode);
-            Last.Next = First;
-            First.Previous = Last;
-            CountValue++;
-            return newNode;
+            AddBefore(First, new LinkedListNode<T>(item));
+            return new LinkedListNode<T>(item);
         }
 
         public void AddFirst(LinkedListNode<T> newNode)
         {
-            VerifyNewNode(newNode);
-            InsertBefore(First, newNode);
-            Last.Next = First;
-            First.Previous = Last;
-            CountValue++;
-            newNode.List = this;
+            AddBefore(First, newNode);
         }
 
         public LinkedListNode<T> AddLast(T item)
@@ -115,27 +103,21 @@ namespace ArrayCRUD
 
         public void AddLast(LinkedListNode<T> newNode)
         {
-            VerifyNewNode(newNode);
-            InsertBefore(head, newNode);
-            Last.Next = First;
-            First.Previous = Last;
-            CountValue++;
-            newNode.List = this;
+            head.List = this;
+            AddBefore(head, newNode);
         }
 
         public LinkedListNode<T> AddAfter(LinkedListNode<T> node, T item)
         {
             VerifyExistingNode(node);
-            LinkedListNode<T> newNode = new LinkedListNode<T>(item, node.List);
+            LinkedListNode<T> newNode = new LinkedListNode<T>(item);
             if (node != head.Previous)
             {
-                InsertBefore(node.Next, newNode);
+                AddBefore(node.Next, newNode);
             }
             else
             {
-                InsertBefore(head, newNode);
-                Last.Next = First;
-                First.Previous = Last;
+                AddLast(item);
             }
 
             return newNode;
@@ -144,17 +126,7 @@ namespace ArrayCRUD
         public void AddAfter(LinkedListNode<T> node, LinkedListNode<T> newNode)
         {
             VerifyExistingNode(node);
-            VerifyNewNode(newNode);
-            if (node != head.Previous)
-            {
-                InsertBefore(node.Next, newNode);
-            }
-            else
-            {
-                InsertBefore(head, newNode);
-                Last.Next = First;
-                First.Previous = Last;
-            }
+            AddBefore(node != head.Previous ? node.Next : head, newNode);
         }
 
         public void Clear()
@@ -341,6 +313,11 @@ namespace ArrayCRUD
 
         private void RemoveNode(LinkedListNode<T> node)
         {
+            if (EmptyList())
+            {
+                return;
+            }
+
             if (node.Next == node)
             {
                 head.Next = head;
