@@ -12,7 +12,7 @@ namespace ArrayCRUD
 
         public CircularDoubleLinkedListCollection()
         {
-            this.head = new LinkedListNode<T>();
+            this.head = new LinkedListNode<T>(default(T));
             head.Next = head;
             head.Previous = head;
         }
@@ -59,7 +59,7 @@ namespace ArrayCRUD
             get { return false; }
         }
 
-        void ICollection<T>.Add(T item)
+        public void Add(T item)
         {
             AddLast(item);
         }
@@ -75,29 +75,26 @@ namespace ArrayCRUD
             VerifyExistingNode(node);
             VerifyNewNode(newNode);
             InsertBefore(node, newNode);
-            Last.Next = First;
-            First.Previous = Last;
             newNode.List = this;
             CountValue++;
         }
 
         public LinkedListNode<T> AddFirst(T item)
         {
-            AddBefore(First, new LinkedListNode<T>(item));
+            AddBefore(head.Next, new LinkedListNode<T>(item));
             return new LinkedListNode<T>(item);
         }
 
         public void AddFirst(LinkedListNode<T> newNode)
         {
-            AddBefore(First, newNode);
+            AddBefore(head.Next, newNode);
         }
 
         public LinkedListNode<T> AddLast(T item)
         {
-            LinkedListNode<T> newNode = new LinkedListNode<T>(item, this);
-            InsertBefore(head, newNode);
-            Last.Next = First;
-            CountValue++;
+            LinkedListNode<T> newNode = new LinkedListNode<T>(item);
+            head.List = this;
+            AddBefore(head, newNode);
             return newNode;
         }
 
@@ -300,10 +297,23 @@ namespace ArrayCRUD
 
         private void InsertBefore(LinkedListNode<T> node, LinkedListNode<T> newNode)
         {
-            newNode.Next = node;
             newNode.Previous = node.Previous;
             node.Previous.Next = newNode;
             node.Previous = newNode;
+            if (node == head.Next)
+            {
+                head.Next = newNode;
+            }
+
+            if (node == head)
+            {
+                newNode.Next = node.Next;
+                node.Next.Previous = newNode;
+            }
+            else
+            {
+                newNode.Next = node;
+            }
         }
 
         private bool EmptyList()
